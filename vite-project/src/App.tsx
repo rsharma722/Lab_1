@@ -1,6 +1,24 @@
-import { departments } from "./data/departments";
+import { useState } from "react";
+import { departments as initialDepartments } from "./data/departments";
+import AddEmployeeForm from "./components/AddEmployeeForm";
+import type { Department } from "./types";
 
 export default function App() {
+  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+
+  function handleAddEmployee(departmentName: string, firstName: string, lastName?: string) {
+    setDepartments((prev) =>
+      prev.map((dept) => {
+        if (dept.name !== departmentName) return dept;
+
+        return {
+          ...dept,
+          employees: [...dept.employees, { firstName, lastName }],
+        };
+      })
+    );
+  }
+
   return (
     <div
       style={{
@@ -10,13 +28,11 @@ export default function App() {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* Header */}
       <header style={{ marginBottom: "24px" }}>
         <h1>Pixell River Employee Directory</h1>
         <p>Welcome! Below is the list of employees by department.</p>
       </header>
 
-      {/* Main Content */}
       <main>
         {departments.map((department) => (
           <section key={department.name} style={{ marginBottom: "20px" }}>
@@ -30,9 +46,10 @@ export default function App() {
             </ul>
           </section>
         ))}
+
+        <AddEmployeeForm departments={departments} onAddEmployee={handleAddEmployee} />
       </main>
 
-      {/* Footer */}
       <footer
         style={{
           marginTop: "32px",
@@ -40,10 +57,7 @@ export default function App() {
           borderTop: "1px solid #ccc",
         }}
       >
-        <small>
-          Copyright Pixell River Financial{" "}
-          {new Date().getFullYear()}.
-        </small>
+        <small>Copyright Pixell River Financial {new Date().getFullYear()}.</small>
       </footer>
     </div>
   );
