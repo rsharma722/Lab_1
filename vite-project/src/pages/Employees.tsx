@@ -1,27 +1,18 @@
-import { useState } from "react";
-import { departments as initialDepartments } from "../data/departments";
+import { useEffect, useState } from "react";
 import AddEmployeeForm from "../components/AddEmployeeForm";
+import { employeeRepo } from "../repos/employeeRepo";
 import type { Department } from "../types";
 
 export default function Employees() {
-  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
-  function handleAddEmployee(
-    departmentName: string,
-    firstName: string,
-    lastName?: string
-  ) {
-    setDepartments((prev) =>
-      prev.map((dept) => {
-        if (dept.name !== departmentName) return dept;
-
-        return {
-          ...dept,
-          employees: [...dept.employees, { firstName, lastName }],
-        };
-      })
-    );
+  function refreshDepartments() {
+    setDepartments(employeeRepo.getDepartments());
   }
+
+  useEffect(() => {
+    refreshDepartments();
+  }, []);
 
   return (
     <main>
@@ -38,10 +29,7 @@ export default function Employees() {
         </section>
       ))}
 
-      <AddEmployeeForm
-        departments={departments}
-        onAddEmployee={handleAddEmployee}
-      />
+      <AddEmployeeForm onEmployeeAdded={refreshDepartments} />
     </main>
   );
 }
