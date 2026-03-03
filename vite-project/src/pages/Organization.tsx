@@ -1,12 +1,27 @@
-import { organization } from "../data/organization";
+import { useEffect, useState, type JSX } from "react";
+import AddOrganizationForm from "../components/AddOrganizationForm";
+import { organizationRepo } from "../repos/organizationRepo";
+import type { Person } from "../types";
 
-export default function Organization() {
+export default function Organization(): JSX.Element {
+  const [people, setPeople] = useState<Person[]>([]);
+
+  function refresh() {
+    setPeople(organizationRepo.getPeople());
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
   return (
     <main>
       <h2>Organization</h2>
 
-      <ul style={{ paddingLeft: 0, listStyle: "none" }}>
-        {organization.map((p) => (
+      <AddOrganizationForm onPersonAdded={refresh} />
+
+      <ul style={{ paddingLeft: 0, listStyle: "none", marginTop: 24 }}>
+        {people.map((p) => (
           <li
             key={`${p.firstName}-${p.lastName}-${p.role}`}
             style={{

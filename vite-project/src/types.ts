@@ -13,3 +13,10 @@ export interface Role {
   lastName: string;
   role: string;
 }
+
+
+export type Person = {
+  firstName: string;
+  lastName: string;
+  role: string;
+};
