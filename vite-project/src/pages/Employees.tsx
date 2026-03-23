@@ -1,35 +1,56 @@
 import { useEffect, useState } from "react";
 import AddEmployeeForm from "../components/AddEmployeeForm";
-import { employeeRepo } from "../repos/employeeRepo";
-import type { Department } from "../types";
+
+type Role = {
+  id: number;
+  name: string;
+};
+
+type Employee = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  role: Role;
+};
 
 export default function Employees() {
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function refreshDepartments() {
-    setDepartments(employeeRepo.getDepartments());
+  function fetchEmployees() {
+    fetch("http://localhost:3001/employees")
+      .then((res) => res.json())
+      .then((data) => {
+        setEmployees(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }
 
   useEffect(() => {
-    refreshDepartments();
+    fetchEmployees();
   }, []);
+
+  if (loading) return <p>Loading employees...</p>;
 
   return (
     <main>
-      {departments.map((department) => (
-        <section key={department.name} style={{ marginBottom: 20 }}>
-          <h2>{department.name}</h2>
-          <ul>
-            {department.employees.map((employee, index) => (
-              <li key={index}>
-                {employee.firstName} {employee.lastName ?? ""}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <h1>Employees</h1>
 
-      <AddEmployeeForm onEmployeeAdded={refreshDepartments} />
+      <ul>
+        {employees.map((emp) => (
+          <li key={emp.id}>
+            {emp.firstName} {emp.lastName} - {emp.role?.name}
+          </li>
+        ))}
+      </ul>
+
+      <AddEmployeeForm onEmployeeAdded={fetchEmployees} />
     </main>
   );
 }
