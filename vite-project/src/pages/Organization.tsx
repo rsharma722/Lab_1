@@ -1,29 +1,42 @@
 import { useEffect, useState, type JSX } from "react";
-import AddOrganizationForm from "../components/AddOrganizationForm";
-import { organizationRepo } from "../repos/organizationRepo";
-import type { Person } from "../types";
+
+type Role = {
+  id: number;
+  name: string;
+  description?: string;
+};
 
 export default function Organization(): JSX.Element {
-  const [people, setPeople] = useState<Person[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function refresh() {
-    setPeople(organizationRepo.getPeople());
+  function fetchRoles() {
+    fetch("http://localhost:3001/roles")
+      .then((res) => res.json())
+      .then((data) => {
+        setRoles(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching roles:", error);
+        setLoading(false);
+      });
   }
 
   useEffect(() => {
-    refresh();
+    fetchRoles();
   }, []);
+
+  if (loading) return <p>Loading organization...</p>;
 
   return (
     <main>
       <h2>Organization</h2>
 
-      <AddOrganizationForm onPersonAdded={refresh} />
-
       <ul style={{ paddingLeft: 0, listStyle: "none", marginTop: 24 }}>
-        {people.map((p) => (
+        {roles.map((role) => (
           <li
-            key={`${p.firstName}-${p.lastName}-${p.role}`}
+            key={role.id}
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -32,10 +45,8 @@ export default function Organization(): JSX.Element {
               borderBottom: "1px solid #eee",
             }}
           >
-            <span>
-              {p.firstName} {p.lastName}
-            </span>
-            <strong>{p.role}</strong>
+            <span>{role.name}</span>
+            <strong>{role.description}</strong>
           </li>
         ))}
       </ul>
