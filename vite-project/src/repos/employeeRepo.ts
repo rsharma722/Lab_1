@@ -1,33 +1,25 @@
-import { departments as initialDepartments } from "../data/departments";
-import type { Department } from "../types";
-
 export type CreateEmployeeDTO = {
-departmentName: string;
-firstName: string;
-lastName?: string;
+  departmentName: string;
+  firstName: string;
+  lastName?: string;
 };
 
-let departments: Department[] = initialDepartments;
-
 export const employeeRepo = {
-getDepartments(): Department[] {
-    return departments;
-},
-
-createEmployee(dto: CreateEmployeeDTO): Department[] {
-    const next = departments.map((dept) => {
-    if (dept.name !== dto.departmentName) return dept;
-
-    return {
-        ...dept,
-        employees: [
-        ...dept.employees,
-        { firstName: dto.firstName.trim(), lastName: dto.lastName?.trim() || undefined },
-        ],
-    };
+  async createEmployee(dto: CreateEmployeeDTO, token: string) {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/employees`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dto),
     });
 
-    departments = next;
-    return departments;
-},
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to create employee");
+    }
+
+    return response.json();
+  },
 };

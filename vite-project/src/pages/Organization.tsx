@@ -1,4 +1,5 @@
 import { useEffect, useState, type JSX } from "react";
+import AddOrganizationForm from "../components/AddOrganizationForm";
 
 type Role = {
   id: number;
@@ -11,7 +12,7 @@ export default function Organization(): JSX.Element {
   const [loading, setLoading] = useState(true);
 
   function fetchRoles() {
-    fetch("http://localhost:3001/roles")
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/roles`)
       .then((res) => res.json())
       .then((data) => {
         setRoles(data);
@@ -50,6 +51,8 @@ export default function Organization(): JSX.Element {
           </li>
         ))}
       </ul>
+
+      <AddOrganizationForm onRoleAdded={fetchRoles} />
     </main>
   );
 }

@@ -1,32 +1,40 @@
-import { organization as initialOrg } from "../data/organization";
-import type { Person } from "../types";
-
-export type CreatePersonDTO = {
-  firstName: string;
-  lastName: string;
-  role: string;
+type CreateRoleDTO = {
+  name: string;
+  description?: string;
 };
 
-let people: Person[] = initialOrg;
+type Role = {
+  id: number;
+  name: string;
+  description?: string;
+};
 
 export const organizationRepo = {
-  getPeople(): Person[] {
-    return people;
+  async getRoles(): Promise<Role[]> {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/roles`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch roles");
+    }
+
+    return response.json();
   },
 
-  roleIsOccupied(role: string): boolean {
-    const normalized = role.trim().toLowerCase();
-    return people.some((p) => p.role.trim().toLowerCase() === normalized);
-  },
+  async createRole(dto: CreateRoleDTO, token: string): Promise<Role> {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/roles`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dto),
+    });
 
-  createPerson(dto: CreatePersonDTO): Person[] {
-    const nextPerson: Person = {
-      firstName: dto.firstName.trim(),
-      lastName: dto.lastName.trim(),
-      role: dto.role.trim(),
-    };
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to create role");
+    }
 
-    people = [...people, nextPerson];
-    return people;
+    return response.json();
   },
 };

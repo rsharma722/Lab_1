@@ -1,96 +1,121 @@
 import { useState } from "react";
 import type { FormEvent, JSX } from "react";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  useAuth,
+} from "@clerk/clerk-react";
 import { useFormInput } from "../hooks/useFormInput";
 import { organizationService } from "../services/organizationService";
 
 export default function AddOrganizationForm(props: {
-  onPersonAdded?: () => void;
+  onRoleAdded?: () => void;
 }): JSX.Element {
-  const { onPersonAdded } = props;
+  const { onRoleAdded } = props;
+  const { getToken, isSignedIn } = useAuth();
 
-  const firstName = useFormInput("");
-  const lastName = useFormInput("");
-  const role = useFormInput("");
+  const name = useFormInput("");
+  const description = useFormInput("");
 
   const [successMsg, setSuccessMsg] = useState("");
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSuccessMsg("");
 
-    firstName.clearMessages();
-    lastName.clearMessages();
-    role.clearMessages();
+    name.clearMessages();
+    description.clearMessages();
 
-    const result = organizationService.createPerson({
-      firstName: firstName.value,
-      lastName: lastName.value,
-      role: role.value,
-    });
-
-    if (!result.ok) {
-      if (result.fieldErrors.firstName) firstName.setMessages(result.fieldErrors.firstName);
-      if (result.fieldErrors.lastName) lastName.setMessages(result.fieldErrors.lastName);
-      if (result.fieldErrors.role) role.setMessages(result.fieldErrors.role);
+    if (!isSignedIn) {
       return;
     }
 
-    setSuccessMsg("Organization entry added!");
-    onPersonAdded?.();
+    try {
+      const token = await getToken();
 
-    firstName.setValue("");
-    lastName.setValue("");
-    role.setValue("");
+      const result = await organizationService.createRole(
+        {
+          name: name.value,
+          description: description.value.trim() || undefined,
+        },
+        token || "",
+      );
+
+      if (!result.ok) {
+        if (result.fieldErrors.name) name.setMessages(result.fieldErrors.name);
+        if (result.fieldErrors.description) description.setMessages(result.fieldErrors.description);
+        return;
+      }
+
+      setSuccessMsg("Role added!");
+      onRoleAdded?.();
+      name.setValue("");
+      description.setValue("");
+    } catch (error) {
+      console.error("Error creating role:", error);
+      name.setMessages(["Failed to add role. Check backend/server."]);
+    }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ marginTop: "24px", padding: "12px", border: "2px solid #333" }}
-    >
-      <h2 style={{ marginTop: 0 }}>Add Organization Entry</h2>
+    <>
+      <SignedIn>
+        <form
+          onSubmit={handleSubmit}
+          style={{ marginTop: "24px", padding: "12px", border: "2px solid #333" }}
+        >
+          <h2 style={{ marginTop: 0 }}>Add Organization Role</h2>
 
-      {successMsg && (
-        <div style={{ border: "1px solid green", padding: 10, marginBottom: 12 }}>
-          {successMsg}
+          {successMsg && (
+            <div style={{ border: "1px solid green", padding: 10, marginBottom: 12 }}>
+              {successMsg}
+            </div>
+          )}
+
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr" }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              Role Name
+              <input value={name.value} onChange={name.onChange} />
+              {name.messages.map((msg) => (
+                <small key={msg} style={{ color: "crimson" }}>
+                  {msg}
+                </small>
+              ))}
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              Description
+              <input value={description.value} onChange={description.onChange} />
+              {description.messages.map((msg) => (
+                <small key={msg} style={{ color: "crimson" }}>
+                  {msg}
+                </small>
+              ))}
+            </label>
+
+            <div style={{ alignSelf: "end" }}>
+              <button type="submit">Add</button>
+            </div>
+          </div>
+        </form>
+      </SignedIn>
+
+      <SignedOut>
+        <div
+          style={{
+            marginTop: "24px",
+            padding: "12px",
+            border: "2px solid #333",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>Add Organization Role</h2>
+          <p>Please log in to create a new role.</p>
+          <SignInButton mode="modal">
+            <button>Log In</button>
+          </SignInButton>
         </div>
-      )}
-
-      <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr" }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          First Name
-          <input value={firstName.value} onChange={firstName.onChange} />
-          {firstName.messages.map((msg) => (
-            <small key={msg} style={{ color: "crimson" }}>
-              {msg}
-            </small>
-          ))}
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          Last Name
-          <input value={lastName.value} onChange={lastName.onChange} />
-          {lastName.messages.map((msg) => (
-            <small key={msg} style={{ color: "crimson" }}>
-              {msg}
-            </small>
-          ))}
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          Role
-          <input value={role.value} onChange={role.onChange} />
-          {role.messages.map((msg) => (
-            <small key={msg} style={{ color: "crimson" }}>
-              {msg}
-            </small>
-          ))}
-        </label>
-
-        <div style={{ alignSelf: "end" }}>
-          <button type="submit">Add</button>
-        </div>
-      </div>
-    </form>
+      </SignedOut>
+    </>
   );
 }
