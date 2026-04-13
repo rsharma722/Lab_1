@@ -71,3 +71,34 @@ export default defineConfig([
   },
 ])
 ```
+
+
+## Lab 5.2 
+
+## Data Caching and Server State Management
+
+### What change I wanted to make in my application
+For this lab, I wanted to improve how my application handles fetching and updating data from the backend. 
+In the previous labs, I was using useEffect and manual fetch calls to get employee and role data. 
+While that worked, it felt repetitive and required extra steps to refresh the data whenever something new was added. 
+I wanted to clean this up and make the code easier to manage, while also learning a more modern and efficient way to handle server data in a React application.
+
+### What tool or tools I made use of to make this change
+To achieve this, I used TanStack Query in my React frontend. This tool is designed specifically for 
+managing server data, which made it a good fit for my application. Instead of manually handling loading 
+states and fetch logic, I used useQuery to handle data fetching automatically. 
+I also added QueryClientProvider at the root of my app so that queries could be shared across components. 
+This helped simplify my code and made the data handling much more structured and easier to understand.
+
+### How this change affects the user experience
+This change improves the user experience by making the app feel more responsive and consistent. 
+Data is now loaded in a smoother way, and users do not have to worry about refreshing the page to see updates. 
+For example, when a new employee or role is added, the list updates right away without extra steps. 
+Overall, the app feels more reliable because data fetching and updating are handled in a more organized and predictable way.
+
+### How this change affects my understanding or conceptualization of the app
+This change helped me better understand the difference between local state and server state in a full-stack application. 
+Before this, I was treating backend data like regular React state, which made things more complicated than necessary. 
+Using TanStack Query showed me that server data should be managed differently, and that there are tools designed specifically 
+for this purpose. It gave me a clearer understanding of how frontend and backend interact, and how using the right tools can simplify 
+development and make the app easier to maintain and expand in the future.

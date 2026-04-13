@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AddEmployeeForm from "../components/AddEmployeeForm";
 
 type Role = {
@@ -15,28 +15,29 @@ type Employee = {
   role: Role;
 };
 
-export default function Employees() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+async function fetchEmployees(): Promise<Employee[]> {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/employees`);
 
-  function fetchEmployees() {
-    fetch("http://localhost:3001/employees")
-      .then((res) => res.json())
-      .then((data) => {
-        setEmployees(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+  if (!response.ok) {
+    throw new Error("Failed to fetch employees");
   }
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  return response.json();
+}
 
-  if (loading) return <p>Loading employees...</p>;
+export default function Employees() {
+  const {
+    data: employees = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["employees"],
+    queryFn: fetchEmployees,
+  });
+
+  if (isLoading) return <p>Loading employees...</p>;
+  if (isError) return <p>Failed to load employees.</p>;
 
   return (
     <main>
@@ -50,7 +51,7 @@ export default function Employees() {
         ))}
       </ul>
 
-      <AddEmployeeForm onEmployeeAdded={fetchEmployees} />
+      <AddEmployeeForm onEmployeeAdded={refetch} />
     </main>
   );
 }

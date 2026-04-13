@@ -1,4 +1,4 @@
-import { useEffect, useState, type JSX } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AddOrganizationForm from "../components/AddOrganizationForm";
 
 type Role = {
@@ -7,28 +7,29 @@ type Role = {
   description?: string;
 };
 
-export default function Organization(): JSX.Element {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
+async function fetchRoles(): Promise<Role[]> {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/roles`);
 
-  function fetchRoles() {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/roles`)
-      .then((res) => res.json())
-      .then((data) => {
-        setRoles(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching roles:", error);
-        setLoading(false);
-      });
+  if (!response.ok) {
+    throw new Error("Failed to fetch roles");
   }
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
+  return response.json();
+}
 
-  if (loading) return <p>Loading organization...</p>;
+export default function Organization() {
+  const {
+    data: roles = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["roles"],
+    queryFn: fetchRoles,
+  });
+
+  if (isLoading) return <p>Loading organization...</p>;
+  if (isError) return <p>Failed to load roles.</p>;
 
   return (
     <main>
@@ -52,7 +53,7 @@ export default function Organization(): JSX.Element {
         ))}
       </ul>
 
-      <AddOrganizationForm onRoleAdded={fetchRoles} />
+      <AddOrganizationForm onRoleAdded={refetch} />
     </main>
   );
 }
